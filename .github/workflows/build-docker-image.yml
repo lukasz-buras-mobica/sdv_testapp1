@@ -85,13 +85,25 @@ jobs:
           if [ ${{ inputs.multiarch }} == true ]; then
             echo "Build Multiarch"
             echo "platforms=linux/amd64, linux/arm64" >> $GITHUB_OUTPUT
-            echo "tags=${{ github.sha }},latest" >> $GITHUB_OUTPUT
           else
             echo "Build ${{inputs.platform}}"
             echo "platforms=linux/${{ inputs.platform }}" >> $GITHUB_OUTPUT
-            echo "tags=${{ github.sha }}" >> $GITHUB_OUTPUT
           fi
         shell: bash
+
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@v4
+        with:
+          images: |
+            ghcr.io/${{steps.github-repository-name-case-adjusted.outputs.lowercase}}/${{ matrix.component.Name }}
+          tags: |
+            type=sha
+            type=ref,event=tag
+            type=semver,pattern={{version}}
+            type=edge
+            type=raw,value=latest
+          #  type=raw,value=latest,enable={{is_default_branch}}
 
       - name: "${{ matrix.component.Name }} -- Build image"
         id: image_build
@@ -106,7 +118,7 @@ jobs:
           platforms: ${{ steps.set_platforms.outputs.platforms }}
           secrets: |
             "github_token=user:${{ secrets.GITHUB_TOKEN }}"
-          tags: ${{ steps.set_platforms.outputs.tags }}
+          tags: ${{ steps.meta.outputs.tags }}
           labels: |
             org.opencontainers.image.source=https://github.com/${{steps.github-repository-name-case-adjusted.outputs.lowercase}}
 
