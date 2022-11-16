@@ -95,7 +95,7 @@ jobs:
         run: |
           tag=$(echo docker://$REGISTRY/$VAPP_NAME:$VAPP_VERSION | tr '[:upper:]' '[:lower:]')
           echo "Copy vApp image $VAPP_IMAGE to '$tag'"
-          skopeo copy --all  oci-archive:$VAPP_IMAGE "$tag"
+          skopeo copy --all  oci-archive:$VAPP_IMAGE "$tag" --additional-tag="latest"
 
   release-documentation:
     name: Generate release documentation
